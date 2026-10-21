@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full bg-slate-900">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+ <title>Acentuación Interactiva: Esdrújulas, Llanas y Agudas</title>
+
+ <!-- Tailwind CSS CDN -->
+ <script src="https://cdn.tailwindcss.com"></script>
+ <script>
+ tailwind.config = {
+ theme: {
+ extend: {
+ colors: {
+ brand: {
+ 50: '#f0f9ff',
+ 100: '#e0f2fe',
+ 500: '#0284c7',
+ 600: '#0369a1',
+ 700: '#075985',
+ },
+ esdrujula: '#8b5cf6',
+ llana: '#3b82f6',
+ aguda: '#10b981'
+ },
+ fontFamily: {
+ sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif']
+ }
+ }
+ }
+ }
+ </script>
+ <!-- FontAwesome Icons CDN -->
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+ <style>
+ * { 
+ -webkit-tap-highlight-color: transparent; 
+ user-select: none;
+ }
+ body { 
+ touch-action: manipulation; 
+ overscroll-behavior-y: none;
+ }
+ 
+ .slide-enter { animation: slideIn 0.2s cubic-bezier(0.16, 1, 0.3, 1); }
+ @keyframes slideIn {
+ from { opacity: 0; transform: translateY(6px) scale(0.985); }
+ to { opacity: 1; transform: translateY(0) scale(1); }
+ }
+
+ ::-webkit-scrollbar { width: 4px; height: 4px; }
+ ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+ </style>
+</head>
+<body class="bg-slate-900 text-slate-800 h-full flex flex-col justify-center items-center font-sans antialiased selection:bg-brand-100">
+
+ <div id="app-shell" class="w-full max-w-md h-full sm:h-[92vh] max-h-[900px] bg-slate-100 sm:rounded-3xl shadow-2xl flex flex-col overflow-hidden relative border-0 sm:border border-slate-700/50">
+
+ <!-- PANTALLA INICIAL DE REGISTRO DE NOMBRE -->
+ <div id="user-welcome-screen" class="absolute inset-0 z-50 bg-slate-900/95 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center">
+ <div class="bg-white w-full rounded-2xl p-6 shadow-2xl flex flex-col items-center">
+ <div class="w-16 h-16 rounded-2xl bg-brand-600 text-white flex items-center justify-center font-black text-2xl shadow-md mb-4">
+ <i class="fa-solid fa-graduation-cap"></i>
+ </div>
+ <h1 class="text-xl font-extrabold text-slate-800 mb-1">¡Bienvenido/a!</h1>
+ <p class="text-xs text-slate-500 mb-5 leading-relaxed">Escribe tu nombre completo para comenzar la actividad interactiva de acentuación.</p>
+ 
+ <div class="w-full text-left mb-4">
+ <label for="user-name-input" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Nombre y Apellidos:</label>
+ <input type="text" id="user-name-input" placeholder="Ej. María García López" class="w-full px-3.5 py-3 rounded-xl border-2 border-slate-200 focus:border-brand-600 focus:outline-none text-sm font-semibold text-slate-800 transition">
+ <p id="name-error-msg" class="hidden text-[11px] font-bold text-rose-500 mt-1">Por favor, introduce tu nombre para continuar.</p>
+ </div>
+
+ <button type="button" id="start-btn" onclick="startActivity()" class="w-full bg-brand-600 hover:bg-brand-700 active:scale-98 text-white font-bold py-3.5 px-4 rounded-xl shadow-md text-sm flex items-center justify-center gap-2 transition cursor-pointer">
+ <span>Comenzar Actividad</span>
+ <i class="fa-solid fa-arrow-right"></i>
+ </button>
+ </div>
+ </div>
+
+ <header class="bg-white border-b border-slate-200/80 px-4 py-3 shrink-0 shadow-xs z-20">
+ <div class="flex items-center justify-between gap-2">
+ <div class="flex items-center gap-2.5">
+ <div class="bg-brand-600 text-white w-9 h-9 rounded-xl flex items-center justify-center font-black shadow-sm">
+ <i class="fa-solid fa-graduation-cap text-base"></i>
+ </div>
+ <div>
+ <span class="text-[10px] font-black uppercase tracking-wider text-brand-600 leading-none block">Lengua Castellana</span>
+ <h1 class="text-xs font-black text-slate-800 leading-tight">Sílaba Tónica</h1>
+ </div>
+ </div>
+
+ <div class="flex items-center gap-1.5">
+ <button onclick="toggleAudio()" id="sound-btn" title="Activar/desactivar sonido" class="w-8 h-8 rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-200 active:scale-95 flex items-center justify-center text-xs transition">
+ <i id="sound-icon" class="fa-solid fa-volume-high"></i>
+ </button>
+
+ <button onclick="openTheoryModal()" class="bg-amber-50 hover:bg-amber-100 active:scale-95 text-amber-900 border border-amber-300/80 px-2.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition shadow-2xs">
+ <i class="fa-solid fa-lightbulb text-amber-500"></i>
+ <span class="hidden xs:inline">Teoría</span>
+ </button>
+ 
+ <button onclick="openGridModal()" class="bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-700 px-2.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1 transition">
+ <i class="fa-solid fa-grid text-slate-400"></i>
+ <span id="header-counter-badge" class="font-extrabold text-slate-800">1/60</span>
+ </button>
+ </div>
+ </div>
+
+ <div class="mt-2.5 bg-slate-100 h-1.5 rounded-full overflow-hidden">
+ <div id="progress-bar-fill" class="bg-brand-600 h-full w-0 transition-all duration-300 rounded-full"></div>
+ </div>
+ </header>
+
+ <main class="flex-1 overflow-y-auto p-3.5 sm:p-4 flex flex-col justify-between" id="touch-area">
+ 
+ <div id="exercise-card" class="bg-white rounded-2xl p-4 sm:p-5 shadow-sm border border-slate-200/90 slide-enter flex flex-col">
+ 
+ <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-3.5">
+ <div class="flex items-center gap-2">
+ <span class="inline-flex items-center gap-1 bg-brand-50 text-brand-700 px-2.5 py-0.5 rounded-full text-xs font-black border border-brand-100">
+ Diapositiva <span id="slide-number">1</span>/60
+ </span>
+ 
+ <button onclick="toggleSyllableHint()" id="syllable-hint-btn" class="text-xs font-bold text-slate-500 hover:text-brand-600 flex items-center gap-1 bg-slate-50 hover:bg-slate-100 px-2 py-0.5 rounded-md transition border border-slate-200">
+ <i class="fa-solid fa-eye text-xs"></i>
+ <span>Separación</span>
+ </button>
+ </div>
+
+ <span id="status-pill" class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-500">
+ Pendiente
+ </span>
+ </div>
+
+ <div id="syllable-preview-box" class="hidden mb-3.5 p-2.5 bg-amber-50/80 border border-amber-200 rounded-xl text-center">
+ <span class="text-xs font-black uppercase text-amber-800 block mb-0.5">Estructura silábica (de izquierda a derecha):</span>
+ <span id="syllable-breakdown-text" class="text-base font-black tracking-widest text-amber-950"></span>
+ </div>
+
+ <div class="mb-4">
+ <div class="flex items-center justify-between mb-2">
+ <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+ 1. Elige la palabra correcta:
+ </label>
+ <button onclick="openTheoryModal()" class="text-xs font-bold text-amber-600 hover:text-amber-700 active:scale-95 flex items-center gap-1 bg-amber-50 px-2 py-0.5 rounded-lg border border-amber-200">
+ <i class="fa-solid fa-book-open text-amber-500"></i>
+ <span>¿Dudas con la tilde?</span>
+ </button>
+ </div>
+
+ <div id="word-options-container" class="grid grid-cols-3 gap-2">
+ <!-- Options dynamically rendered via JS -->
+ </div>
+ </div>
+
+ <div class="mb-1">
+ <div class="flex items-center justify-between mb-2">
+ <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+ 2. ¿Qué tipo de palabra es?
+ </label>
+ <button onclick="openTheoryModal()" class="text-xs font-bold text-amber-600 hover:text-amber-700 active:scale-95 flex items-center gap-1">
+ <i class="fa-solid fa-circle-question text-amber-500"></i>
+ <span>Reglas de acentuación</span>
+ </button>
+ </div>
+
+ <!-- Classification Buttons -->
+ <div class="grid grid-cols-3 gap-2">
+ <button onclick="selectType('esdrujula')" id="type-btn-esdrujula" class="type-option-btn border-2 border-slate-200 hover:border-purple-300 bg-slate-50 py-3.5 px-1 rounded-xl text-xs font-bold text-slate-700 flex flex-col items-center gap-0.5 transition active:scale-95">
+ <span class="text-[10px] uppercase tracking-wider text-purple-600 font-black">Antepenúlt.</span>
+ <span class="text-sm font-extrabold">Esdrújula</span>
+ </button>
+
+ <button onclick="selectType('llana')" id="type-btn-llana" class="type-option-btn border-2 border-slate-200 hover:border-blue-300 bg-slate-50 py-3.5 px-1 rounded-xl text-xs font-bold text-slate-700 flex flex-col items-center gap-0.5 transition active:scale-95">
+ <span class="text-[10px] uppercase tracking-wider text-blue-600 font-black">Penúltima</span>
+ <span class="text-sm font-extrabold">Llana</span>
+ </button>
+
+ <button onclick="selectType('aguda')" id="type-btn-aguda" class="type-option-btn border-2 border-slate-200 hover:border-emerald-300 bg-slate-50 py-3.5 px-1 rounded-xl text-xs font-bold text-slate-700 flex flex-col items-center gap-0.5 transition active:scale-95">
+ <span class="text-[10px] uppercase tracking-wider text-emerald-600 font-black">Última</span>
+ <span class="text-sm font-extrabold">Aguda</span>
+ </button>
+ </div>
+ </div>
+
+ <div id="feedback-banner" class="hidden mt-3.5 p-3 rounded-xl text-xs font-medium flex items-start gap-2.5 leading-relaxed">
+ <i id="feedback-icon" class="text-base mt-0.5 shrink-0"></i>
+ <div>
+ <span id="feedback-title" class="font-bold block mb-0.5 text-xs"></span>
+ <span id="feedback-text"></span>
+ </div>
+ </div>
+ </div>
+
+ <div class="space-y-2 mt-3 shrink-0">
+ <button id="action-btn" onclick="handleAction()" class="w-full bg-brand-600 hover:bg-brand-700 active:scale-98 text-white font-bold py-3.5 px-4 rounded-xl shadow-sm flex items-center justify-center gap-2 text-sm transition disabled:opacity-50 disabled:pointer-events-none">
+ <span>Comprobar respuesta</span>
+ <i class="fa-solid fa-circle-check"></i>
+ </button>
+
+ <div class="flex items-center justify-between gap-2">
+ <button onclick="prevSlide()" id="prev-btn" class="flex-1 bg-white hover:bg-slate-50 border border-slate-200 py-2.5 px-2 rounded-xl text-xs font-bold text-slate-700 flex items-center justify-center gap-1.5 transition active:scale-95 disabled:opacity-40">
+ <i class="fa-solid fa-arrow-left"></i>
+ <span>Anterior</span>
+ </button>
+ 
+ <button onclick="openTheoryModal()" class="flex-1 bg-amber-50 hover:bg-amber-100 border border-amber-300/90 py-2.5 px-2 rounded-xl text-xs font-bold text-amber-900 flex items-center justify-center gap-1.5 transition active:scale-95 shadow-2xs">
+ <i class="fa-solid fa-book-open text-amber-500 text-sm"></i>
+ <span>Ver Teoría</span>
+ </button>
+
+ <button onclick="nextSlide()" id="next-btn" class="flex-1 bg-white hover:bg-slate-50 border border-slate-200 py-2.5 px-2 rounded-xl text-xs font-bold text-slate-700 flex items-center justify-center gap-1.5 transition active:scale-95 disabled:opacity-40">
+ <span>Siguiente</span>
+ <i class="fa-solid fa-arrow-right"></i>
+ </button>
+ </div>
+ </div>
+ </main>
+
+ <div id="theory-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 opacity-0 pointer-events-none transition-opacity duration-200">
+ <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-2xl p-5 shadow-2xl max-h-[88vh] flex flex-col transform translate-y-6 transition-transform duration-200">
+ 
+ <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-3 shrink-0">
+ <div class="flex items-center gap-2.5">
+ <span class="w-9 h-9 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center font-bold text-base shadow-2xs">
+ <i class="fa-solid fa-lightbulb"></i>
+ </span>
+ <div>
+ <h2 class="text-sm font-bold text-slate-800 leading-tight">Guía Rápida de Acentuación</h2>
+ <p class="text-xs text-slate-500">Reglas clave de acentuación</p>
+ </div>
+ </div>
+ <button onclick="closeTheoryModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center text-sm transition">
+ <i class="fa-solid fa-xmark"></i>
+ </button>
+ </div>
+
+ <div class="overflow-y-auto space-y-3 text-xs text-slate-600 pr-1 py-1">
+ <div class="bg-amber-50/90 border border-amber-200/90 p-3 rounded-xl text-amber-950 leading-relaxed">
+ <strong class="text-amber-900 block mb-1 text-xs">💡 ¿Qué es la sílaba tónica?</strong>
+ Es la sílaba de la palabra que se pronuncia con <strong>mayor intensidad</strong>. Según su posición de izquierda a derecha (o desde el final), las clasificamos en:
+ </div>
+
+ <div class="space-y-2.5">
+ <div class="bg-purple-50/80 border border-purple-200 p-3 rounded-xl flex items-start gap-2.5">
+ <span class="bg-purple-600 text-white text-[10px] font-black uppercase px-2 py-0.5 rounded-md mt-0.5 shrink-0">Esdrújula</span>
+ <div class="space-y-0.5">
+ <p class="font-bold text-purple-950 text-xs">Antepenúltima posición.</p>
+ <p class="text-purple-800 text-xs leading-snug">
+ <strong>Regla:</strong> ¡SIEMPRE llevan tilde!
+ </p>
+ <p class="text-slate-500 text-[11px] italic">Ejemplos: <strong>PÁ</strong>-ja-ro, <strong>MÚ</strong>-si-ca, <strong>PLÁ</strong>-ta-no.</p>
+ </div>
+ </div>
+
+ <div class="bg-blue-50/80 border border-blue-200 p-3 rounded-xl flex items-start gap-2.5">
+ <span class="bg-blue-600 text-white text-[10px] font-black uppercase px-2 py-0.5 rounded-md mt-0.5 shrink-0">Llana</span>
+ <div class="space-y-0.5">
+ <p class="font-bold text-blue-950 text-xs">Penúltima posición.</p>
+ <p class="text-blue-800 text-xs leading-snug">
+ <strong>Llevan tilde cuando:</strong> NO terminan en vocal, ni en <strong>-N</strong>, ni en <strong>-S</strong>.
+ </p>
+ <p class="text-slate-500 text-[11px] italic">Ejemplos: <strong>ÁR</strong>-bol, <strong>LÁ</strong>-piz (ven-<strong>TA</strong>-na sin tilde).</p>
+ </div>
+ </div>
+
+ <div class="bg-emerald-50/80 border border-emerald-200 p-3 rounded-xl flex items-start gap-2.5">
+ <span class="bg-emerald-600 text-white text-[10px] font-black uppercase px-2 py-0.5 rounded-md mt-0.5 shrink-0">Aguda</span>
+ <div class="space-y-0.5">
+ <p class="font-bold text-emerald-950 text-xs">Última posición.</p>
+ <p class="text-emerald-800 text-xs leading-snug">
+ <strong>Llevan tilde cuando:</strong> Terminan en vocal (<em>a, e, i, o, u</em>), <strong>-N</strong> o <strong>-S</strong>.
+ </p>
+ <p class="text-slate-500 text-[11px] italic">Ejemplos: bal-<strong>ÓN</strong>, ca-<strong>FÉ</strong>, com-<strong>PÁS</strong> (ca-ra-<strong>COL</strong> sin tilde).</p>
+ </div>
+ </div>
+ </div>
+ </div>
+
+ <div class="pt-3 border-t border-slate-100 mt-2 shrink-0">
+ <button id="close-theory-btn" onclick="closeTheoryModal()" class="w-full bg-brand-600 hover:bg-brand-700 active:scale-98 text-white font-bold py-3 px-4 rounded-xl text-xs flex items-center justify-center gap-2 transition shadow-sm">
+ <i class="fa-solid fa-arrow-left text-sm"></i>
+ <span>Volver a la diapositiva en curso</span>
+ </button>
+ </div>
+ </div>
+ </div>
+
+ <div id="grid-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 opacity-0 pointer-events-none transition-opacity duration-200">
+ <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-2xl p-5 shadow-2xl max-h-[85vh] flex flex-col transform translate-y-6 transition-transform duration-200">
+ <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-3 shrink-0">
+ <div>
+ <h2 class="text-sm font-bold text-slate-800">Mapa de Diapositivas (1-60)</h2>
+ <p class="text-xs text-slate-500">Selecciona cualquier número para ir al ejercicio</p>
+ </div>
+ <button onclick="closeGridModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center text-sm transition">
+ <i class="fa-solid fa-xmark"></i>
+ </button>
+ </div>
+
+ <div id="questions-grid-container" class="overflow-y-auto grid grid-cols-6 gap-2 p-1 max-h-[50vh]">
+ <!-- Populated via JS -->
+ </div>
+
+ <div class="pt-3 border-t border-slate-100 mt-3 flex items-center justify-between gap-2 shrink-0">
+ <div class="flex items-center gap-3 text-xs font-medium text-slate-600">
+ <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span> Correcto</span>
+ <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-rose-500 inline-block"></span> Error</span>
+ <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-slate-200 inline-block"></span> Pendiente</span>
+ </div>
+ <button onclick="closeGridModal()" class="bg-slate-800 hover:bg-slate-900 text-white font-bold px-4 py-2 rounded-xl text-xs active:scale-95 transition">
+ Cerrar
+ </button>
+ </div>
+ </div>
+ </div>
+
+ <div id="results-modal" class="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-xs flex items-center justify-center p-4 opacity-0 pointer-events-none transition-opacity duration-200">
+ <div class="bg-white w-full max-w-sm rounded-2xl p-5 shadow-2xl text-center flex flex-col items-center">
+ <div id="results-badge" class="w-14 h-14 rounded-full bg-amber-100 text-amber-500 flex items-center justify-center text-2xl mb-2 shadow-inner">
+ <i class="fa-solid fa-trophy"></i>
+ </div>
+ 
+ <h2 class="text-lg font-bold text-slate-800 mb-0.5">¡Ficha Completada!</h2>
+ <p class="text-xs text-slate-500 mb-3" id="res-user-name">Usuario</p>
+
+ <div class="bg-slate-50 border border-slate-200 rounded-2xl p-3 w-full mb-3 flex items-center justify-around">
+ <div>
+ <span class="block text-xl font-black text-emerald-600" id="res-score">0 / 60</span>
+ <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Total Aciertos</span>
+ </div>
+ <div class="h-8 w-px bg-slate-200"></div>
+ <div>
+ <span class="block text-xl font-black text-brand-600" id="res-percent">0%</span>
+ <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Precisión</span>
+ </div>
+ </div>
+
+ <div class="w-full space-y-2 mb-4 text-left">
+ <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+ <span class="text-xs font-bold text-slate-700 block mb-1"><i class="fa-solid fa-spell-check text-brand-600 mr-1"></i> Elección de Palabra (Tilde):</span>
+ <div class="flex justify-between text-xs">
+ <span class="text-emerald-700 font-bold">Aciertos: <span id="res-word-correct">0</span></span>
+ <span class="text-rose-600 font-bold">Errores: <span id="res-word-incorrect">0</span></span>
+ </div>
+ </div>
+
+ <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+ <span class="text-xs font-bold text-slate-700 block mb-1"><i class="fa-solid fa-layer-group text-purple-600 mr-1"></i> Tipo (Aguda/Llana/Esdrújula):</span>
+ <div class="flex justify-between text-xs">
+ <span class="text-emerald-700 font-bold">Aciertos: <span id="res-type-correct">0</span></span>
+ <span class="text-rose-600 font-bold">Errores: <span id="res-type-incorrect">0</span></span>
+ </div>
+ </div>
+ </div>
+
+ <div id="db-status-msg" class="text-xs font-semibold text-slate-500 mb-3 flex items-center justify-center gap-1.5">
+ <i class="fa-solid fa-spinner fa-spin text-brand-600"></i>
+ <span>Guardando resultados en Google Sheets...</span>
+ </div>
+
+ <div class="space-y-2 w-full">
+ <button onclick="restartQuiz()" class="w-full bg-brand-600 hover:bg-brand-700 text-white font-bold py-3 px-4 rounded-xl text-xs flex items-center justify-center gap-2 transition active:scale-98 shadow-sm">
+ <i class="fa-solid fa-rotate-right"></i>
+ <span>Reiniciar ejercicios</span>
+ </button>
+ <button onclick="closeResultsModal()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2.5 px-4 rounded-xl text-xs transition">
+ Revisar respuestas
+ </button>
+ </div>
+ </div>
+ </div>
+ </div>
+
+ <script>
+ const WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbx7hntz8PcsHaUjI2UVgSf0xTLQ1j7dsqE2ieLyxcUn7zZmR6v0GtCa3s1I8xp1vEb2/exec";
+
+ let userName = "";
+
+ const exercisesData = [
+ { id: 1, options: ["musica", "música", "musicá"], correctOpt: 1, type: "esdrujula", breakdown: "MÚ - si - ca", rule: "Tónica en antepenúltima posición. Las esdrújulas SIEMPRE llevan tilde." },
+ { id: 2, options: ["balón", "balon", "bálon"], correctOpt: 0, type: "aguda", breakdown: "ba - LÓN", rule: "Tónica en última posición. Aguda terminada en -N lleva tilde." },
+ { id: 3, options: ["arbol", "arból", "árbol"], correctOpt: 2, type: "llana", breakdown: "ÁR - bol", rule: "Tónica en penúltima posición. Llana terminada en -L lleva tilde." },
+ { id: 4, options: ["pájaro", "pajaro", "pajáro"], correctOpt: 0, type: "esdrujula", breakdown: "PÁ - ja - ro", rule: "Tónica en antepenúltima posición. Esdrújula siempre lleva tilde." },
+ { id: 5, options: ["cafe", "café", "cáfe"], correctOpt: 1, type: "aguda", breakdown: "ca - FÉ", rule: "Tónica en última posición. Aguda terminada en vocal lleva tilde." },
+ { id: 6, options: ["lapíz", "lápiz", "lapiz"], correctOpt: 1, type: "llana", breakdown: "LÁ - piz", rule: "Tónica en penúltima posición. Llana terminada en -Z lleva tilde." },
+ { id: 7, options: ["teléfono", "telefono", "telefóno"], correctOpt: 0, type: "esdrujula", breakdown: "te - LÉ - fo - no", rule: "Tónica en antepenúltima posición. Esdrújula siempre lleva tilde." },
+ { id: 8, options: ["raton", "ráton", "ratón"], correctOpt: 2, type: "aguda", breakdown: "ra - TÓN", rule: "Tónica en última posición. Aguda terminada en -N lleva tilde." },
+ { id: 9, options: ["azúcar", "azucar", "azucár"], correctOpt: 0, type: "llana", breakdown: "a - ZÚ - car", rule: "Tónica en penúltima posición. Llana terminada en -R lleva tilde." },
+ { id: 10, options: ["platano", "plátano", "platáno"], correctOpt: 1, type: "esdrujula", breakdown: "PLÁ - ta - no", rule: "Tónica en antepenúltima posición. Esdrújula siempre lleva tilde." },
+ { id: 11, options: ["volcán", "volcan", "vólcan"], correctOpt: 0, type: "aguda", breakdown: "vol - CÁN", rule: "Tónica en última posición. Aguda terminada en -N lleva tilde." },
+ { id: 12, options: ["facil", "facíl", "fácil"], correctOpt: 2, type: "llana", breakdown: "FÁ - cil", rule: "Tónica en penúltima posición. Llana terminada en -L lleva tilde." },
+ { id: 13, options: ["mágica", "magica", "magíca"], correctOpt: 0, type: "esdrujula", breakdown: "MÁ - gi - ca", rule: "Tónica en antepenúltima posición. Esdrújula siempre lleva tilde." },
+ { id: 14, options: ["compas", "compás", "cómpas"], correctOpt: 1, type: "aguda", breakdown: "com - PÁS", rule: "Tónica en última posición. Aguda terminada en -S lleva tilde." },
+ { id: 15, options: ["ángel", "angel", "angél"], correctOpt: 0, type: "llana", breakdown: "ÁN - gel", rule: "Tónica en penúltima posición. Llana terminada en -L lleva tilde." },
+ { id: 16, options: ["lampara", "lámpara", "lampára"], correctOpt: 1, type: "esdrujula", breakdown: "LÁM - pa - ra", rule: "Tónica en antepenúltima posición. Esdrújula siempre lleva tilde." },
+ { id: 17, options: ["capitán", "capitan", "capítan"], correctOpt: 0, type: "aguda", breakdown: "ca - pi - TÁN", rule: "Tónica en última posición. Aguda terminada en -N lleva tilde." },
+ { id: 18, options: ["dificil", "difícil", "dificíl"], correctOpt: 1, type: "llana", breakdown: "di - FÍ - cil", rule: "Tónica en penúltima posición. Llana terminada en -L lleva tilde." },
+ { id: 19, options: ["brujula", "brujúla", "brújula"], correctOpt: 2, type: "esdrujula", breakdown: "BRÚ - ju - la", rule: "Tónica en antepenúltima posición. Esdrújula siempre lleva tilde." },
+ { id: 20, options: ["sofa", "sofá", "sófa"], correctOpt: 1, type: "aguda", breakdown: "so - FÁ", rule: "Tónica en última posición. Aguda terminada en vocal lleva tilde." },
+ { id: 21, options: ["césped", "cesped", "cespéd"], correctOpt: 0, type: "llana", breakdown: "CÉS - ped", rule: "Tónica en penúltima posición. Llana terminada en -D lleva tilde." },
+ { id: 22, options: ["medico", "médico", "medíco"], correctOpt: 1, type: "esdrujula", breakdown: "MÉ - di - co", rule: "Tónica en antepenúltima posición. Esdrújula siempre lleva tilde." },
+ { id: 23, options: ["camion", "cámion", "camión"], correctOpt: 2, type: "aguda", breakdown: "ca - MIÓN", rule: "Tónica en última posición. Aguda terminada en -N lleva tilde." },
+ { id: 24, options: ["móvil", "movil", "movíl"], correctOpt: 0, type: "llana", breakdown: "MÓ - vil", rule: "Tónica en penúltima posición. Llana terminada en -L lleva tilde." },
+ { id: 25, options: ["camara", "cámara", "camára"], correctOpt: 1, type: "esdrujula", breakdown: "CÁ - ma - ra", rule: "Tónica en antepenúltima posición. Esdrújula siempre lleva tilde." },
+ { id: 26, options: ["jardin", "jardín", "járdin"], correctOpt: 1, type: "aguda", breakdown: "jar - DÍN", rule: "Tónica en última posición. Aguda terminada en -N lleva tilde." },
+ { id: 27, options: ["líder", "lider", "lidér"], correctOpt: 0, type: "llana", breakdown: "LÍ - der", rule: "Tónica en penúltima posición. Llana terminada en -R lleva tilde." },
+ { id: 28, options: ["sabado", "sabádo", "sábado"], correctOpt: 2, type: "esdrujula", breakdown: "SÁ - ba - do", rule: "Tónica en antepenúltima posición. Esdrújula siempre lleva tilde." },
+ { id: 29, options: ["corazon", "corazón", "corázon"], correctOpt: 1, type: "aguda", breakdown: "co - ra - ZÓN", rule: "Tónica en última posición. Aguda terminada en -N lleva tilde." },
+ { id: 30, options: ["túnel", "tunel", "tunél"], correctOpt: 0, type: "llana", breakdown: "TÚ - nel", rule: "Tónica en penúltima posición. Llana terminada en -L lleva tilde." },
+ { id: 31, options: ["rápida", "rapida", "rapída"], correctOpt: 0, type: "esdrujula", breakdown: "RÁ - pi - da", rule: "Tónica en antepenúltima posición. Esdrújula siempre lleva tilde." },
+ { id: 32, options: ["páred", "pared", "paréd"], correctOpt: 1, type: "aguda", breakdown: "pa - RED", rule: "Tónica en última posición. No lleva tilde porque termina en -D." },
+ { id: 33, options: ["carcel", "cárcel", "carcél"], correctOpt: 1, type: "llana", breakdown: "CÁR - cel", rule: "Tónica en penúltima posición. Llana terminada en -L lleva tilde." },
+ { id: 34, options: ["numero", "numéro", "número"], correctOpt: 2, type: "esdrujula", breakdown: "NÚ - me - ro", rule: "Tónica en antepenúltima posición. Esdrújula siempre lleva tilde." },
+ { id: 35, options: ["reloj", "réloj", "relój"], correctOpt: 0, type: "aguda", breakdown: "re - LOJ", rule: "Tónica en última posición. No lleva tilde porque termina en -J." },
+ { id: 36, options: ["fértil", "fertil", "fertíl"], correctOpt: 0, type: "llana", breakdown: "FÉR - til", rule: "Tónica en penúltima posición. Llana terminada en -L lleva tilde." },
+ { id: 37, options: ["sabana", "sábana", "sabána"], correctOpt: 1, type: "esdrujula", breakdown: "SÁ - ba - na", rule: "Tónica en antepenúltima posición. Esdrújula siempre lleva tilde." },
+ { id: 38, options: ["París", "Paris", "Páris"], correctOpt: 0, type: "aguda", breakdown: "Pa - RÍS", rule: "Tónica en última posición. Aguda terminada en -S lleva tilde." },
+ { id: 39, options: ["debil", "débil", "debíl"], correctOpt: 1, type: "llana", breakdown: "DÉ - bil", rule: "Tónica en penúltima posición. Llana terminada en -L lleva tilde." },
+ { id: 40, options: ["lágrima", "lagrima", "lagríma"], correctOpt: 0, type: "esdrujula", breakdown: "LÁ - gri - ma", rule: "Tónica en antepenúltima posición. Esdrújula siempre lleva tilde." },
+ { id: 41, options: ["algodon", "algodón", "algódon"], correctOpt: 1, type: "aguda", breakdown: "al - go - DÓN", rule: "Tónica en última posición. Aguda terminada en -N lleva tilde." },
+ { id: 42, options: ["álbum", "album", "albúm"], correctOpt: 0, type: "llana", breakdown: "ÁL - bum", rule: "Tónica en penúltima posición. Llana terminada en -M lleva tilde." },
+ { id: 43, options: ["semaforo", "semáforo", "semafóro"], correctOpt: 1, type: "esdrujula", breakdown: "se - MÁ - fo - ro", rule: "Tónica en antepenúltima posición. Esdrújula siempre lleva tilde." },
+ { id: 44, options: ["tambor", "támbor", "tambór"], correctOpt: 0, type: "aguda", breakdown: "tam - BOR", rule: "Tónica en última posición. No lleva tilde porque termina en -R." },
+ { id: 45, options: ["trebol", "trébol", "treból"], correctOpt: 1, type: "llana", breakdown: "TRÉ - bol", rule: "Tónica en penúltima posición. Llana terminada en -L lleva tilde." },
+ { id: 46, options: ["cascara", "cascára", "cáscara"], correctOpt: 2, type: "esdrujula", breakdown: "CÁS - ca - ra", rule: "Tónica en antepenúltima posición. Esdrújula siempre lleva tilde." },
+ { id: 47, options: ["León", "Leon", "Léon"], correctOpt: 0, type: "aguda", breakdown: "Le - ÓN", rule: "Tónica en última posición. Aguda terminada en -N lleva tilde." },
+ { id: 48, options: ["carácter", "caracter", "caráctér"], correctOpt: 0, type: "llana", breakdown: "ca - RÁC - ter", rule: "Tónica en penúltima posición. Llana terminada en -R lleva tilde." },
+ { id: 49, options: ["fabrica", "fábrica", "fabríca"], correctOpt: 1, type: "esdrujula", breakdown: "FÁ - bri - ca", rule: "Tónica en antepenúltima posición. Esdrújula siempre lleva tilde." },
+ { id: 50, options: ["cantar", "cántar", "cantár"], correctOpt: 0, type: "aguda", breakdown: "can - TAR", rule: "Tónica en última posición. No lleva tilde porque termina en -R." },
+ { id: 51, options: ["comic", "cómic", "comíc"], correctOpt: 1, type: "llana", breakdown: "CÓ - mic", rule: "Tónica en penúltima posición. Llana terminada en -C lleva tilde." },
+ { id: 52, options: ["piramide", "pirámide", "piramíde"], correctOpt: 1, type: "esdrujula", breakdown: "pi - RÁ - mi - de", rule: "Tónica en antepenúltima posición. Esdrújula siempre lleva tilde." },
+ { id: 53, options: ["azul", "ázul", "azúl"], correctOpt: 0, type: "aguda", breakdown: "a - ZUL", rule: "Tónica en última posición. No lleva tilde porque termina en -L." },
+ { id: 54, options: ["util", "útil", "utíl"], correctOpt: 1, type: "llana", breakdown: "Ú - til", rule: "Tónica en penúltima posición. Llana terminada en -L lleva tilde." },
+ { id: 55, options: ["película", "pelicula", "pelicúla"], correctOpt: 0, type: "esdrujula", breakdown: "pe - LÍ - cu - la", rule: "Tónica en antepenúltima posición. Esdrújula siempre lleva tilde." },
+ { id: 56, options: ["papel", "pápel", "papél"], correctOpt: 0, type: "aguda", breakdown: "pa - PEL", rule: "Tónica en última posición. No lleva tilde porque termina en -L." },
+ { id: 57, options: ["futbol", "fútbol", "futból"], correctOpt: 1, type: "llana", breakdown: "FÚT - bol", rule: "Tónica en penúltima posición. Llana terminada en -L lleva tilde." },
+ { id: 58, options: ["brocoli", "brocóli", "brócoli"], correctOpt: 2, type: "esdrujula", breakdown: "BRÓ - co - li", rule: "Tónica en antepenúltima posición. Esdrújula siempre lleva tilde." },
+ { id: 59, options: ["Peru", "Perú", "Péru"], correctOpt: 1, type: "aguda", breakdown: "Pe - RÚ", rule: "Tónica en última posición. Aguda terminada en vocal lleva tilde." },
+ { id: 60, options: ["torax", "tórax", "toráx"], correctOpt: 1, type: "llana", breakdown: "TÓ - rax", rule: "Tónica en penúltima posición. Llana terminada en -X lleva tilde." }
+ ];
+
+ let currentIndex = 0;
+ let audioEnabled = true;
+ let audioCtx = null;
+
+ const userAnswers = Array.from({ length: 60 }, () => ({
+ selectedOpt: null,
+ selectedType: null,
+ checked: false,
+ wordIsCorrect: false,
+ typeIsCorrect: false,
+ isCorrect: false
+ }));
+
+ function startActivity() {
+ const input = document.getElementById('user-name-input');
+ const errorMsg = document.getElementById('name-error-msg');
+ const val = input.value ? input.value.trim() : '';
+ 
+ if (!val) {
+ errorMsg.classList.remove('hidden');
+ return;
+ }
+ 
+ errorMsg.classList.add('hidden');
+ userName = val;
+ document.getElementById('user-welcome-screen').style.display = 'none';
+ renderExercise();
+ }
+
+ function playSound(type) {
+ if (!audioEnabled) return;
+ try {
+ if (!audioCtx) {
+ audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+ }
+ if (audioCtx.state === 'suspended') {
+ audioCtx.resume();
+ }
+
+ const osc = audioCtx.createOscillator();
+ const gain = audioCtx.createGain();
+ osc.connect(gain);
+ gain.connect(audioCtx.destination);
+
+ const now = audioCtx.currentTime;
+
+ if (type === 'click') {
+ osc.type = 'sine';
+ osc.frequency.setValueAtTime(400, now);
+ gain.gain.setValueAtTime(0.08, now);
+ gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+ osc.start(now);
+ osc.stop(now + 0.05);
+ } else if (type === 'correct') {
+ osc.type = 'triangle';
+ osc.frequency.setValueAtTime(523.25, now);
+ osc.frequency.setValueAtTime(659.25, now + 0.08);
+ gain.gain.setValueAtTime(0.12, now);
+ gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+ osc.start(now);
+ osc.stop(now + 0.25);
+ } else if (type === 'wrong') {
+ osc.type = 'sawtooth';
+ osc.frequency.setValueAtTime(220, now);
+ osc.frequency.setValueAtTime(180, now + 0.1);
+ gain.gain.setValueAtTime(0.12, now);
+ gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+ osc.start(now);
+ osc.stop(now + 0.25);
+ }
+ } catch (e) {
+ console.log("Audio no disponible", e);
+ }
+ }
+
+ function toggleAudio() {
+ audioEnabled = !audioEnabled;
+ const icon = document.getElementById('sound-icon');
+ const btn = document.getElementById('sound-btn');
+ if (audioEnabled) {
+ icon.className = 'fa-solid fa-volume-high';
+ btn.className = 'w-8 h-8 rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-200 active:scale-95 flex items-center justify-center text-xs transition';
+ } else {
+ icon.className = 'fa-solid fa-volume-xmark text-rose-500';
+ btn.className = 'w-8 h-8 rounded-xl bg-rose-50 text-rose-600 hover:bg-rose-100 active:scale-95 flex items-center justify-center text-xs transition';
+ }
+ }
+
+ function renderExercise() {
+ const ex = exercisesData[currentIndex];
+ const state = userAnswers[currentIndex];
+
+ document.getElementById('slide-number').textContent = ex.id;
+ document.getElementById('header-counter-badge').textContent = `${ex.id}/60`;
+ const progress = ((currentIndex + 1) / 60) * 100;
+ document.getElementById('progress-bar-fill').style.width = `${progress}%`;
+
+ document.getElementById('syllable-breakdown-text').textContent = ex.breakdown;
+
+ const wordOptsContainer = document.getElementById('word-options-container');
+ wordOptsContainer.innerHTML = '';
+ ex.options.forEach((opt, idx) => {
+ const btn = document.createElement('button');
+ btn.onclick = () => selectWordOpt(idx);
+ btn.id = `word-opt-${idx}`;
+ btn.className = 'py-3.5 px-2 rounded-xl text-sm font-extrabold border-2 transition active:scale-95 flex items-center justify-center text-center leading-tight min-h-[48px] ';
+ 
+ if (state.selectedOpt === idx) {
+ btn.className += 'bg-brand-50 border-brand-600 text-brand-700 shadow-xs';
+ } else {
+ btn.className += 'bg-slate-50 border-slate-200 text-slate-700 hover:border-slate-300';
+ }
+ 
+ btn.textContent = opt;
+ wordOptsContainer.appendChild(btn);
+ });
+
+ const typeTypes = ['esdrujula', 'llana', 'aguda'];
+ typeTypes.forEach(t => {
+ const btn = document.getElementById(`type-btn-${t}`);
+ btn.classList.remove('bg-purple-100', 'border-purple-600', 'bg-blue-100', 'border-blue-600', 'bg-emerald-100', 'border-emerald-600', 'bg-slate-50', 'border-slate-200');
+ 
+ if (state.selectedType === t) {
+ if (t === 'esdrujula') btn.classList.add('bg-purple-100', 'border-purple-600');
+ else if (t === 'llana') btn.classList.add('bg-blue-100', 'border-blue-600');
+ else if (t === 'aguda') btn.classList.add('bg-emerald-100', 'border-emerald-600');
+ } else {
+ btn.classList.add('bg-slate-50', 'border-slate-200');
+ }
+ });
+
+ const statusPill = document.getElementById('status-pill');
+ const feedbackBanner = document.getElementById('feedback-banner');
+ const actionBtn = document.getElementById('action-btn');
+
+ if (state.checked) {
+ feedbackBanner.classList.remove('hidden');
+ if (state.isCorrect) {
+ statusPill.textContent = 'Correcto';
+ statusPill.className = 'text-xs font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200';
+ feedbackBanner.className = 'mt-3.5 p-3 rounded-xl text-xs font-medium flex items-start gap-2.5 leading-relaxed bg-emerald-50 border border-emerald-200 text-emerald-900';
+ document.getElementById('feedback-icon').className = 'fa-solid fa-circle-check text-emerald-600 text-base mt-0.5 shrink-0';
+ document.getElementById('feedback-title').textContent = '¡Excelente!';
+ } else {
+ statusPill.textContent = 'Incorrecto';
+ statusPill.className = 'text-xs font-bold px-2.5 py-0.5 rounded-full bg-rose-100 text-rose-800 border border-rose-200';
+ feedbackBanner.className = 'mt-3.5 p-3 rounded-xl text-xs font-medium flex items-start gap-2.5 leading-relaxed bg-rose-50 border border-rose-200 text-rose-900';
+ document.getElementById('feedback-icon').className = 'fa-solid fa-circle-xmark text-rose-600 text-base mt-0.5 shrink-0';
+ document.getElementById('feedback-title').textContent = 'Revisa tu respuesta';
+ }
+ document.getElementById('feedback-text').textContent = ex.rule;
+ actionBtn.innerHTML = '<span>Siguiente diapositiva</span> <i class="fa-solid fa-arrow-right"></i>';
+ } else {
+ feedbackBanner.classList.add('hidden');
+ statusPill.textContent = 'Pendiente';
+ statusPill.className = 'text-xs font-bold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-500';
+ actionBtn.innerHTML = '<span>Comprobar respuesta</span> <i class="fa-solid fa-circle-check"></i>';
+ }
+
+ document.getElementById('prev-btn').disabled = currentIndex === 0;
+ document.getElementById('next-btn').disabled = currentIndex === 59;
+ }
+
+ function selectWordOpt(optIdx) {
+ playSound('click');
+ userAnswers[currentIndex].selectedOpt = optIdx;
+ userAnswers[currentIndex].checked = false;
+ renderExercise();
+ }
+
+ function selectType(type) {
+ playSound('click');
+ userAnswers[currentIndex].selectedType = type;
+ userAnswers[currentIndex].checked = false;
+ renderExercise();
+ }
+
+ function handleAction() {
+ const state = userAnswers[currentIndex];
+ const ex = exercisesData[currentIndex];
+
+ if (state.checked) {
+ if (currentIndex < 59) {
+ nextSlide();
+ } else {
+ showResultsModal();
+ }
+ return;
+ }
+
+ if (state.selectedOpt === null || state.selectedType === null) {
+ const statusPill = document.getElementById('status-pill');
+ statusPill.textContent = '¡Falta opción!';
+ statusPill.className = 'text-xs font-bold px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-300';
+ return;
+ }
+
+ state.checked = true;
+ state.wordIsCorrect = (state.selectedOpt === ex.correctOpt);
+ state.typeIsCorrect = (state.selectedType === ex.type);
+ state.isCorrect = state.wordIsCorrect && state.typeIsCorrect;
+
+ if (state.isCorrect) {
+ playSound('correct');
+ } else {
+ playSound('wrong');
+ }
+
+ renderExercise();
+ }
+
+ function nextSlide() {
+ if (currentIndex < 59) {
+ currentIndex++;
+ playSound('click');
+ renderExercise();
+ resetCardAnimation();
+ }
+ }
+
+ function prevSlide() {
+ if (currentIndex > 0) {
+ currentIndex--;
+ playSound('click');
+ renderExercise();
+ resetCardAnimation();
+ }
+ }
+
+ function resetCardAnimation() {
+ const card = document.getElementById('exercise-card');
+ card.classList.remove('slide-enter');
+ void card.offsetWidth;
+ card.classList.add('slide-enter');
+ }
+
+ function toggleSyllableHint() {
+ playSound('click');
+ const box = document.getElementById('syllable-preview-box');
+ box.classList.toggle('hidden');
+ }
+
+ function openTheoryModal() {
+ playSound('click');
+ const modal = document.getElementById('theory-modal');
+ modal.classList.remove('opacity-0', 'pointer-events-none');
+ modal.children[0].classList.remove('translate-y-6');
+ }
+
+ function closeTheoryModal() {
+ playSound('click');
+ const modal = document.getElementById('theory-modal');
+ modal.classList.add('opacity-0', 'pointer-events-none');
+ modal.children[0].classList.add('translate-y-6');
+ }
+
+ function openGridModal() {
+ playSound('click');
+ const container = document.getElementById('questions-grid-container');
+ container.innerHTML = '';
+
+ exercisesData.forEach((ex, idx) => {
+ const btn = document.createElement('button');
+ btn.textContent = idx + 1;
+ btn.onclick = () => {
+ currentIndex = idx;
+ closeGridModal();
+ renderExercise();
+ resetCardAnimation();
+ };
+
+ let btnStyle = 'h-9 rounded-xl font-black text-xs transition flex items-center justify-center ';
+ const state = userAnswers[idx];
+
+ if (idx === currentIndex) {
+ btnStyle += 'ring-2 ring-brand-600 ring-offset-1 ';
+ }
+
+ if (state.checked) {
+ if (state.isCorrect) {
+ btnStyle += 'bg-emerald-500 text-white shadow-xs';
+ } else {
+ btnStyle += 'bg-rose-500 text-white shadow-xs';
+ }
+ } else {
+ btnStyle += 'bg-slate-100 text-slate-700 hover:bg-slate-200';
+ }
+
+ btn.className = btnStyle;
+ container.appendChild(btn);
+ });
+
+ const modal = document.getElementById('grid-modal');
+ modal.classList.remove('opacity-0', 'pointer-events-none');
+ modal.children[0].classList.remove('translate-y-6');
+ }
+
+ function closeGridModal() {
+ playSound('click');
+ const modal = document.getElementById('grid-modal');
+ modal.classList.add('opacity-0', 'pointer-events-none');
+ modal.children[0].classList.add('translate-y-6');
+ }
+
+ function showResultsModal() {
+ const totalCorrect = userAnswers.filter(a => a.checked && a.isCorrect).length;
+ const percentage = Math.round((totalCorrect / 60) * 100);
+
+ const wordCorrect = userAnswers.filter(a => a.checked && a.wordIsCorrect).length;
+ const wordIncorrect = 60 - wordCorrect;
+
+ const typeCorrect = userAnswers.filter(a => a.checked && a.typeIsCorrect).length;
+ const typeIncorrect = 60 - typeCorrect;
+
+ document.getElementById('res-user-name').textContent = `Alumno/a: ${userName}`;
+ document.getElementById('res-score').textContent = `${totalCorrect} / 60`;
+ document.getElementById('res-percent').textContent = `${percentage}%`;
+
+ document.getElementById('res-word-correct').textContent = wordCorrect;
+ document.getElementById('res-word-incorrect').textContent = wordIncorrect;
+
+ document.getElementById('res-type-correct').textContent = typeCorrect;
+ document.getElementById('res-type-incorrect').textContent = typeIncorrect;
+
+ const modal = document.getElementById('results-modal');
+ modal.classList.remove('opacity-0', 'pointer-events-none');
+
+ sendResultsToDatabase({
+ usuario: userName,
+ fecha: new Date().toLocaleString('es-ES'),
+ puntuacion_total: totalCorrect,
+ precision_porcentaje: percentage,
+ desglose_palabras: {
+ aciertos: wordCorrect,
+ errores: wordIncorrect
+ },
+ desglose_tipo_acentuacion: {
+ aciertos: typeCorrect,
+ errores: typeIncorrect
+ }
+ });
+ }
+
+ function sendResultsToDatabase(resultsData) {
+ const msgContainer = document.getElementById('db-status-msg');
+ msgContainer.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-brand-600"></i><span>Guardando resultados en Google Sheets...</span>`;
+
+ fetch(WEBHOOK_URL, {
+ method: 'POST',
+ mode: 'no-cors',
+ headers: {
+ 'Content-Type': 'application/json'
+ },
+ body: JSON.stringify(resultsData)
+ })
+ .then(() => {
+ msgContainer.className = "text-xs font-semibold text-emerald-600 mb-3 flex items-center justify-center gap-1.5";
+ msgContainer.innerHTML = `<i class="fa-solid fa-circle-check"></i><span>Resultados guardados con éxito en la hoja.</span>`;
+ })
+ .catch(err => {
+ console.error("Error al enviar:", err);
+ msgContainer.className = "text-xs font-semibold text-rose-600 mb-3 flex items-center justify-center gap-1.5";
+ msgContainer.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i><span>No se pudo guardar la información.</span>`;
+ });
+ }
+
+ function closeResultsModal() {
+ playSound('click');
+ const modal = document.getElementById('results-modal');
+ modal.classList.add('opacity-0', 'pointer-events-none');
+ }
+
+ function restartQuiz() {
+ userAnswers.forEach(ans => {
+ ans.selectedOpt = null;
+ ans.selectedType = null;
+ ans.checked = false;
+ ans.wordIsCorrect = false;
+ ans.typeIsCorrect = false;
+ ans.isCorrect = false;
+ });
+ currentIndex = 0;
+ closeResultsModal();
+ renderExercise();
+ resetCardAnimation();
+ }
+
+ // EVENT LISTENERS
+ window.addEventListener('DOMContentLoaded', () => {
+ const nameInput = document.getElementById('user-name-input');
+ if (nameInput) {
+ nameInput.addEventListener('keypress', (e) => {
+ if (e.key === 'Enter') {
+ startActivity();
+ }
+ });
+ }
+ });
+ </script>
+</body>
+</html>
